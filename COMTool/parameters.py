@@ -62,6 +62,7 @@ class Parameters:
         "skin": "light",
         "locale": "en",
         "encoding": "UTF-8",
+        "windowGeometry": "",
         "skipVersion": None,
         "connId": "serial",
         "pluginsInfo": {          # enabled plugins ID
@@ -105,6 +106,9 @@ class Parameters:
         with open(path, encoding="utf-8") as f:
             config = json.load(f)
             if "version" in config and config["version"] == self.config["version"]:
+                # fill new added keys with default value for old config file
+                for k, v in self.config.items():
+                    config.setdefault(k, v)
                 self.config = config
             else: # for old config, just backup
                 t = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

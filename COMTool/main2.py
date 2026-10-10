@@ -43,7 +43,7 @@ except ImportError:
     from COMTool.pluginItems import PluginItem
     from .widgets import TitleBar, CustomTitleBarWindowMixin, EventFilter, ButtonCombbox, HelpWidget
 
-from PyQt5.QtCore import pyqtSignal, Qt, QRect, QMargins, QCoreApplication
+from PyQt5.QtCore import pyqtSignal, Qt, QRect, QMargins, QCoreApplication, QByteArray
 from PyQt5.QtWidgets import (QApplication, QWidget,QPushButton,QMessageBox,QDesktopWidget,QMainWindow,
                              QVBoxLayout,QHBoxLayout,QGridLayout,QTextEdit,QLabel,QRadioButton,QCheckBox,
                              QLineEdit,QGroupBox,QSplitter,QFileDialog, QScrollArea, QTabWidget, QMenu, QSplashScreen)
@@ -373,8 +373,12 @@ class MainWindow(CustomTitleBarWindowMixin, QMainWindow):
         if sys.platform == 'darwin':
             self.macOsAddDockMenu()
 
-        self.resize(850, 500)
-        self.MoveToCenter()
+        restored = False
+        if self.config["windowGeometry"]:
+            restored = self.restoreGeometry(QByteArray.fromBase64(self.config["windowGeometry"].encode()))
+        if not restored:  # first run or restore failed, use default size
+            self.resize(850, 500)
+            self.MoveToCenter()
         self.show()
 
     def add_new_window(self):
@@ -583,6 +587,10 @@ class MainWindow(CustomTitleBarWindowMixin, QMainWindow):
 
     def saveConfig(self):
         # print("save config:", self.config)
+        try:
+            self.config["windowGeometry"] = self.saveGeometry().toBase64().data().decode()
+        except Exception as e:
+            log.w("save window geometry failed:", e)
         self.config.save(parameters.configFilePath)
         print("save config compelte")
 
